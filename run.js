@@ -245,14 +245,19 @@ async function getServerStatus() {
 async function getVars(names) {   
     let vars = [];
 
-    rcon.connect()
-    for (let name of names) {
-        let r = await getVar(name);
-        vars.push({
-            name: r[0],
-            value: r[1],
-            readonly: constants.readonly_cvars.includes(name)
-        });
+    try {
+        await rcon.connect();
+        for (let name of names) {
+            let r = await getVar(name);
+            vars.push({
+                name: r[0],
+                value: r[1],
+                readonly: constants.readonly_cvars.includes(name)
+            });
+        }
+    } catch (e) {
+        console.log("Error getting live cvars:", e);
+        throw e;
     }
     
     return vars;
