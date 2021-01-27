@@ -156,31 +156,37 @@ app.post('/login', async (req, res) => {
         res.send({ success: false });
         return;
     }
-
+    console.log("New login...")
     res.cookie('token', 'isLoggedIn', {signed: true})
 
     let files = [];
 
+    console.log("Getting server status...")
     let status;
     try {
         status = await getServerStatus();
     } catch (e) {
         status = "Unable to retrieve server status: "
         status += e;
+        console.log(status)
     }
     
     let cvars;
+    console.log("Getting live variables...")
     try {
         cvars = await getVars(settings.convars);
     } catch (e) {
         status += "\nUnable to retrieve live variables: " + e;
         cvars = [];
+        console.log("Unable to retrieve live variables: " + e);
     }
 
     let config;
+    console.log("Getting config file...")
     try {
-        config = await getCfgVars(settings.cfgvars);
+        config = getCfgVars(settings.cfgvars);
     } catch (e) {
+        console.log("Unable to open config file: " + e)
         status += "\nUnable to open config file: " + e;
     }
     let actions = settings.commands;
@@ -198,6 +204,7 @@ app.post('/login', async (req, res) => {
 
     let connectLink = `steam://connect/${settings.public_ip ? settings.public_ip : settings.server_ip}/${password}`; 
 
+    console.log("Login finished, sending data...");
     res.send({ success: true, configs: files, status: status, cvars: cvars, config: config, actions: actions, connect_link: connectLink });
 })
 
