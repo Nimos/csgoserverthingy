@@ -315,7 +315,7 @@ async function getVar(name) {
 /*
     Sets the value of a cvar on the server
 */
-function setCvar(name, value) {
+async function setCvar(name, value) {
     let command = name + " \"" + value + "\"";
     console.log("rcon " + command)
 
