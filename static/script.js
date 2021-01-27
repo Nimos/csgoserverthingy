@@ -109,6 +109,21 @@ $(document).ready(function () {
         });
     });
 
+    /* try to login with cookie */
+    $.post('/login', { }, (result) => {
+        if (result.success) {
+            $('#loading-main').fadeOut();
+            $('#server-status').text(result.status);
+            populateCvars(result.cvars);
+            populateConfigVars(result.config);
+            populateButtons(result.actions);
+            populateConfigs(result.configs);
+        } else {
+            $('input#link').fadeIn();
+            $('#loading-main').fadeOut();
+        }
+    });
+
     statusPoll();
 });
 

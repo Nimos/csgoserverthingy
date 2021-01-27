@@ -373,3 +373,42 @@ td.option-value.readonly {
 ::selection {
     background-color: #5c408f;
 }
+
+div#loading-main {
+    animation: loadingmain 800ms infinite ease-in-out;
+    display: block;
+    width: 150px;
+    height: 150px;
+    position: absolute;
+    top: calc(50vh - 105px);
+    left: calc(50vw - 75px);
+    text-align: center;
+}
+
+@keyframes loadingmain {
+    0% {
+        transform: scale(1) rotate(0);
+    }
+
+    100% {
+        transform: scale(1) rotate(720deg);
+    }
+}
+
+@keyframes loadingsub {
+     0% {
+        transform: scale(1);
+    }
+
+    100% {
+        transform: scale(3);
+    }
+}
+
+span.loading-dot {
+    display: inline-block;
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    background-color: #996BEF77;
+}

@@ -6,27 +6,9 @@ const bodyParser = require('body-parser');
 const fs = require('fs');
 const Rcon = require('srcds-rcon');
 const { exec } = require("child_process");
+const settings = require('./settings.js')
 
 
-/* various settings */
-const settings = {
-    "password": "",
-    "configs_dir": "./configs", // ignore this for now
-    "config_file": "./config.cfg",
-    "backup_dir": "./backups", // ignore this for now
-    "cookiesSecret": "E1ZE4BctIqIhn3XEALKe", // set this to a unique random string
-    "server_ip": "localhost", // set this to your csgo server's ip
-    "rcon_password": "",
-    "convars": ["sv_password"],
-    "cfgvars": ["sv_password"],
-    "csgoserver_runscript": "",
-    "commands": [
-        {
-            name: "restart",
-            label: "Restart Server",
-        }
-    ]
-}
 
 /* other constants */
 const constants = {
@@ -164,7 +146,7 @@ app.post('/changecfgvar', (req, res) => {
 */
 app.post('/login', async (req, res) => {
 
-    if (req.body.password !== settings.password) {
+    if (req.body.password !== settings.password && req.signedCookies.token !== "isLoggedIn") {
         res.send({ success: false });
         return;
     }
@@ -173,9 +155,28 @@ app.post('/login', async (req, res) => {
 
     let files = [];
 
-    let status = await getServerStatus();
-    let cvars = await getVars(settings.convars);
-    let config = await getCfgVars(settings.cfgvars);
+    let status;
+    try {
+        status = await getServerStatus();
+    } catch (e) {
+        status = "Unable to retrieve server status: "
+        status += e;
+    }
+    
+    let cvars;
+    try {
+        cvars = await getVars(settings.convars);
+    } catch (e) {
+        status += "\nUnable to retrieve live variables: " + e;
+        cvars = [];
+    }
+
+    let config;
+    try {
+        config = await getCfgVars(settings.cfgvars);
+    } catch (e) {
+        status += "\nUnable to open config file: " + e;
+    }
     let actions = settings.commands;
 
     res.send({ success: true, configs: files, status: status, cvars: cvars, config: config, actions: actions });
@@ -262,7 +263,7 @@ async function getVars(names) {
 */
 async function getVar(name) {
     let promise = new Promise((resolve, reject) => {
-        rcon.command('cvarlist ' + name).then((result) => {
+        rcon.command('cvarlist ' + name, 500).then((result) => {
             console.log('cvarlist ' + name);
             result = result.split("\n");
             result = result[2];
