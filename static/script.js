@@ -11,7 +11,7 @@ $(document).ready(function () {
                     $('#server-status').text(result.status);
                     populateCvars(result.cvars);
                     populateConfigVars(result.config);
-                    populateButtons(result.actions);
+                    populateButtons(result.actions, result.connect_link);
                     $(this).fadeOut(() => populateConfigs(result.configs));
                 }
             });
@@ -116,7 +116,7 @@ $(document).ready(function () {
             $('#server-status').text(result.status);
             populateCvars(result.cvars);
             populateConfigVars(result.config);
-            populateButtons(result.actions);
+            populateButtons(result.actions, result.connect_link);
             populateConfigs(result.configs);
         } else {
             $('input#link').fadeIn();
@@ -183,8 +183,8 @@ function populateConfigVars(data) {
     $('.cfgvars').html(result);
 }
 
-function populateButtons(data) {
-    let result = "";
+function populateButtons(data, link) {
+    let result = `<a class="action-button" href="${link}">Connect</a>`;
     for (let action of data) {
         console.log(action);
         result += `

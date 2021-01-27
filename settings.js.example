@@ -6,6 +6,7 @@ const settings = {
     "backup_dir": "./backups",      // ignore this for now
     "cookiesSecret": "E1ZE4BctIqIhn3XEALKe", // set this to a random string, used to sign the cookies
     "server_ip": "localhost",       // cs go server's ip
+    //"public_ip": "",                // cs go server's public ip for the connect button, leave unset to use server_ip
     "rcon_password": "guest",       // cs go server's rcon password
     "convars": ["sv_password"],     // list of live server cvars that are allowed to be changed
     "cfgvars": ["sv_password"],     // list of config variables that are allowed to be changed

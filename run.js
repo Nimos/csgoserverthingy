@@ -6,7 +6,8 @@ const bodyParser = require('body-parser');
 const fs = require('fs');
 const Rcon = require('srcds-rcon');
 const { exec } = require("child_process");
-const settings = require('./settings.js')
+const settings = require('./settings.js');
+const { cfgvars } = require('./settings.js');
 
 
 
@@ -53,7 +54,12 @@ app.get('/serverstatus', async function(req, res){
         return;
     }
 
-    let status = await getServerStatus();
+    let status;
+    try {
+        status = await getServerStatus();
+    } catch (e) {
+        status = "Unable to retrieve server status: " + e;
+    }
     res.send(status);
 });
 
@@ -179,7 +185,20 @@ app.post('/login', async (req, res) => {
     }
     let actions = settings.commands;
 
-    res.send({ success: true, configs: files, status: status, cvars: cvars, config: config, actions: actions });
+    let password = cvars.find(obj => obj.name == "sv_password");
+    if (!password) {
+        password = config.find(obj => obj.name == "sv_password");
+    } 
+
+    if (!password) {
+        password = "";
+    } else {
+        password = password.value;
+    }
+
+    let connectLink = `steam://connect/${settings.public_ip ? settings.public_ip : settings.server_ip}/${password}`; 
+
+    res.send({ success: true, configs: files, status: status, cvars: cvars, config: config, actions: actions, connect_link: connectLink });
 })
 
 /*
@@ -234,9 +253,10 @@ function restartServer() {
     Runs the rcon status command and returns the result
 */
 async function getServerStatus() {
-    return new Promise((resolve, reject) => {
-        rcon.connect().catch(reject).then(() => rcon.command('status').then(resolve).catch(reject));
-    });
+    await rcon.connect()
+    let status = await rcon.command('status');
+
+    return status;
 }
 
 /*
@@ -256,7 +276,6 @@ async function getVars(names) {
             });
         }
     } catch (e) {
-        console.log("Error getting live cvars:", e);
         throw e;
     }
     
@@ -267,17 +286,17 @@ async function getVars(names) {
     Gets the live value of a cvar
 */
 async function getVar(name) {
-    let promise = new Promise((resolve, reject) => {
-        rcon.command('cvarlist ' + name, 500).then((result) => {
-            console.log('cvarlist ' + name);
-            result = result.split("\n");
-            result = result[2];
-            result = result.split(":");
-            resolve([result[0].trim(), result[1].trim()]);
-        }).catch(error => { console.log(error); reject(error); });
-    });
 
-    return promise;
+    try {
+        let result = await rcon.command('cvarlist ' + name, 500);
+
+        result = result.split("\n");
+        result = result[2];
+        result = result.split(":");
+        return [result[0].trim(), result[1].trim()];
+    } catch (e) {
+        return [];
+    }
 }
 
 /*
@@ -286,7 +305,7 @@ async function getVar(name) {
 function setCvar(name, value) {
     let command = name + " \"" + value + "\"";
     console.log("rcon " + command)
-    return rcon.connect().then(() => rcon.command(command));
+    return rcon.connect().then(() => rcon.command(command)).catch((e) => console.log("error setting cvar", e));
 }
 
 /*  

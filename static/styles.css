@@ -194,6 +194,8 @@ a.action-button {
     background-color: rgba(0,0,0,0.6);
     cursor:pointer;
     transition: border-color 100ms linear;
+    color: white;
+    text-decoration: none;
 }
 
 a.action-button:hover {
