@@ -1,0 +1,4 @@
+backups/*
+configs/*
+node_modules
+config.cfg
