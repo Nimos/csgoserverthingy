@@ -226,7 +226,9 @@ app.post('/runcommand', async (req, res) => {
         if (constants.special_commands[name]) {
             result = await constants.special_commands[name]();
         } else {
-            result = rcon.command(name);
+            await rcon.connect();
+            result = await rcon.command(name);
+            await rcon.disconnect();
         }
 
         res.send({ success: true, output: result });
@@ -239,6 +241,7 @@ app.post('/runcommand', async (req, res) => {
 */
 function restartServer() {
     return new Promise((resolve, reject) => {
+        delete process.env.TMUX;
         exec(settings.csgoserver_runscript + " restart", (error, stdout, stderr) => {
             let output = "";
             if (error) {
@@ -261,7 +264,8 @@ function restartServer() {
 */
 async function getServerStatus() {
     await rcon.connect()
-    let status = await rcon.command('status');
+    let status = await rcon.command('status', 500);
+    await rcon.disconnect();
 
     return status;
 }
@@ -285,6 +289,8 @@ async function getVars(names) {
     } catch (e) {
         throw e;
     }
+
+    await rcon.disconnect();
     
     return vars;
 }
@@ -312,7 +318,15 @@ async function getVar(name) {
 function setCvar(name, value) {
     let command = name + " \"" + value + "\"";
     console.log("rcon " + command)
-    return rcon.connect().then(() => rcon.command(command)).catch((e) => console.log("error setting cvar", e));
+
+    try {
+        await rcon.connect();
+        await rcon.command(command, 500);
+        await rcon.disconnect();
+    } catch (e) {
+        console.log("error setting cvar", e);
+    }
+    return true;;
 }
 
 /*  
